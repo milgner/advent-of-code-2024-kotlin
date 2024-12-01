@@ -1,23 +1,35 @@
 import kotlin.math.absoluteValue
 
+// working with two lists of numbers that demarcate locations to search
+data class Locations(val list1: List<Int>, val list2: List<Int>) {
+    class Builder {
+        private val list1 = mutableListOf<Int>()
+        private val list2 = mutableListOf<Int>()
+
+        fun addLine(n1: Int, n2: Int) = apply {
+            list1.add(n1)
+            list2.add(n2)
+        }
+        fun build() = Locations(list1.sorted(), list2.sorted())
+    }
+
+    val distance: Int get() = list1.foldIndexed(0) { index, acc, number ->
+        acc + (number - list2[index]).absoluteValue
+    }
+
+    val similarity: Int get() = list1.fold(0) { acc, n1 ->
+        acc + (list2.count { it == n1 } * n1)
+    }
+}
+
 fun main() {
     val input = readInput("day01_input")
 
-    val lists = input.map {
-        val parts = it.split(Regex("\\s+"))
-        parts[0].toInt() to parts[1].toInt()
-    }
-    val numbers1 = lists.map { it.first }.sorted()
-    val numbers2 = lists.map { it.second }.sorted()
+    val locations = input.fold(Locations.Builder()) { builder, line ->
+        val parts = line.split(Regex("\\s+")).map(String::toInt)
+        builder.addLine(parts[0], parts[1])
+    }.build()
 
-    val distance = numbers1.foldIndexed(0) { index, acc, number ->
-        acc + (number - numbers2[index]).absoluteValue
-    }
-
-    val similarity = numbers1.fold(0) { acc, n1 ->
-        acc + (numbers2.count { it == n1 } * n1)
-    }
-
-    println("Total distance: $distance")
-    println("Similarity score: $similarity")
+    println("Total distance: ${locations.distance}")
+    println("Similarity score: ${locations.similarity}")
 }
