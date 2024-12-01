@@ -1,21 +1,23 @@
+import kotlin.math.absoluteValue
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        return input.size
+    val input = readInput("day01_input")
+
+    val lists = input.map {
+        val parts = it.split(Regex("\\s+"))
+        parts[0].toInt() to parts[1].toInt()
+    }
+    val numbers1 = lists.map { it.first }.sorted()
+    val numbers2 = lists.map { it.second }.sorted()
+
+    val distance = numbers1.foldIndexed(0) { index, acc, number ->
+        acc + (number - numbers2[index]).absoluteValue
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    val similarity = numbers1.fold(0) { acc, n1 ->
+        acc + (numbers2.count { it == n1 } * n1)
     }
 
-    // Test if implementation meets criteria from the description, like:
-    check(part1(listOf("test_input")) == 1)
-
-    // Or read a large test input from the `src/Day01_test.txt` file:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 1)
-
-    // Read the input from the `src/Day01.txt` file.
-    val input = readInput("Day01")
-    part1(input).println()
-    part2(input).println()
+    println("Total distance: $distance")
+    println("Similarity score: $similarity")
 }
