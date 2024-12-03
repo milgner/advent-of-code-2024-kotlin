@@ -13,6 +13,7 @@ data class Locations(val list1: List<Int>, val list2: List<Int>) {
         fun build() = Locations(list1.sorted(), list2.sorted())
     }
 
+    // could have been `by lazy` as well - but it’s not really useful here as its needed only once
     val distance: Int get() = list1.foldIndexed(0) { index, acc, number ->
         acc + (number - list2[index]).absoluteValue
     }
