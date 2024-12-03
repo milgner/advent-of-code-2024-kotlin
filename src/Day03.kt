@@ -1,10 +1,10 @@
 
-val mulInstruction = """mul\((\d+),(\d+)\)""".toRegex()
-val mulWithDoOrDont = """(do(?:n't)?\(\))|(?:mul\((\d+),(\d+)\))""".toRegex()
+const val MUL_INSTRUCTION = """mul\((\d+),(\d+)\)"""
+const val DO_OR_MUL_INSTRUCTION = """(do(?:n't)?\(\))|(?:$MUL_INSTRUCTION)"""
 
 fun main() {
     val input = readInput("day03_input").joinToString()
-    val total = mulInstruction.findAll(input)
+    val total = MUL_INSTRUCTION.toRegex().findAll(input)
         .map {
             val (f1, f2) = it.destructured
             f1.toInt() * f2.toInt()
@@ -12,10 +12,10 @@ fun main() {
         .sum()
 
     var doIt = true
-    val totalDoOrDont = mulWithDoOrDont.findAll(input)
+    val totalDoOrDont = DO_OR_MUL_INSTRUCTION.toRegex().findAll(input)
         .map {
             val (doOrDont, f1, f2) = it.destructured
-            if (!doOrDont.isNullOrBlank()) {
+            if (doOrDont.isNotBlank()) {
                 doIt = doOrDont == "do()"
                 0
             } else if (doIt) {
