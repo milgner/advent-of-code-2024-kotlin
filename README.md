@@ -4,6 +4,12 @@ Welcome to the Advent of Code[^aoc] Kotlin project created by [milgner][github] 
 
 In this repository, milgner is about to provide solutions for the puzzles using [Kotlin][kotlin] language.
 
+Note: the following criteria were applied when writing
+
+1. easy to write
+2. easy to read
+3. performance doesn't matter: it's only executed once after all
+
 [^aoc]:
     [Advent of Code][aoc] – An annual event of Christmas-oriented programming challenges started December 2015.
     Every year since then, beginning on the first day of December, a programming puzzle is published every day for twenty-five days.
