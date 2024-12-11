@@ -5,12 +5,29 @@ enum class GuardDirection(val char: Char) {
     fun turn(): GuardDirection = entries[(entries.indexOf(this) + 1) % GuardDirection.entries.size]
 }
 
-data class Map(val grid: Array<CharArray>) {
+open class GridMap(val grid: Array<CharArray>) {
+    val width = grid[0].size
+    val height = grid.size
+
+    fun outOfBounds(pos: Pair<Int, Int>) = pos.first < 0 ||
+            pos.first >= width ||
+            pos.second < 0 ||
+            pos.second >= height
+    fun inBounds(pos: Pair<Int, Int>) = !outOfBounds(pos)
+
+    operator fun get(pos: Pair<Int, Int>) = grid[pos.second][pos.first]
+    operator fun set(pos: Pair<Int, Int>, value: Char) { grid[pos.second][pos.first] = value }
+}
+
+fun readGridMapInput(filename: String) = readInput(filename).map { it.toCharArray() }.toTypedArray()
+
+class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
     lateinit var guardPosition: Pair<Int, Int>
     lateinit var guardDirection: GuardDirection
 
-    val width = grid[0].size
-    val height = grid.size
+    companion object {
+        fun loadFromInput() = GuardMap(readGridMapInput("day06_input"))
+    }
 
     init {
         grid.forEachIndexed findPos@{ y, line ->
@@ -19,27 +36,25 @@ data class Map(val grid: Array<CharArray>) {
                     if (c == direction.char) {
                         guardPosition = Pair(x, y)
                         guardDirection = direction
-                        markGrid(guardPosition, '.')
+                        set(guardPosition, '.')
                         return@findPos
                     }
                 }
             }
         }
-        markGrid(guardPosition, '.')
+        set(guardPosition, '.')
     }
-
-    val fieldAhead get() = fieldInDirection(guardDirection)
 
     fun withChangedField(position: Pair<Int, Int>, change: Char, block: () -> Unit) {
         val oldPos = guardPosition
         val oldDirection = guardDirection
         val currentField = grid[position.second][position.first]
 
-        markGrid(position, change)
+        set(position, change)
         block()
         this.guardPosition = oldPos
         this.guardDirection = oldDirection
-        markGrid(position, currentField)
+        set(position, currentField)
     }
 
     fun fieldInDirection(direction: GuardDirection): Pair<Int, Int> =
@@ -61,6 +76,8 @@ data class Map(val grid: Array<CharArray>) {
             }
         }
 
+    val fieldAhead get() = fieldInDirection(guardDirection)
+
     // walk one step and return the new position
     fun step(): Boolean {
         while (true) {
@@ -77,20 +94,12 @@ data class Map(val grid: Array<CharArray>) {
             }
         }
     }
-
-    fun outOfBounds(pos: Pair<Int, Int>) = pos.first < 0 || pos.first == width || pos.second < 0 || pos.second == height
-
-    fun markGrid(pos: Pair<Int, Int>, c: Char) {
-        grid[pos.second][pos.first] = c
-    }
 }
 
-fun loadMapFromInput() = Map(readInput("day06_input").map { it.toCharArray() }.toTypedArray())
-
 fun checkTrajectory() {
-    val map = loadMapFromInput()
+    val map = GuardMap.loadFromInput()
     do {
-        map.markGrid(map.guardPosition, 'X')
+        map[map.guardPosition] = 'X'
     } while (map.step())
 
     val totalPassed = map.grid.sumOf { line -> line.count { it == 'X' } }
@@ -98,8 +107,8 @@ fun checkTrajectory() {
 }
 
 fun checkInfiniteLoops() {
-    val map1 = loadMapFromInput()
-    val map2 = loadMapFromInput()
+    val map1 = GuardMap.loadFromInput()
+    val map2 = GuardMap.loadFromInput()
 
     var obstacles = 0;
 
