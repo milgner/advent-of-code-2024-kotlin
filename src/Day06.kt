@@ -5,24 +5,31 @@ enum class GuardDirection(val char: Char) {
     fun turn(): GuardDirection = entries[(entries.indexOf(this) + 1) % GuardDirection.entries.size]
 }
 
+data class Position(val x: Int, val y: Int) {
+    val left get() = Position(x-1, y)
+    val right get() = Position(x+1, y)
+    val up get() = Position(x, y - 1)
+    val down get() = Position(x, y+1)
+}
+
 open class GridMap(val grid: Array<CharArray>) {
     val width = grid[0].size
     val height = grid.size
 
-    fun outOfBounds(pos: Pair<Int, Int>) = pos.first < 0 ||
-            pos.first >= width ||
-            pos.second < 0 ||
-            pos.second >= height
-    fun inBounds(pos: Pair<Int, Int>) = !outOfBounds(pos)
+    fun outOfBounds(pos: Position) = pos.x < 0 ||
+            pos.x >= width ||
+            pos.y < 0 ||
+            pos.y >= height
+    fun inBounds(pos: Position) = !outOfBounds(pos)
 
-    operator fun get(pos: Pair<Int, Int>) = grid[pos.second][pos.first]
-    operator fun set(pos: Pair<Int, Int>, value: Char) { grid[pos.second][pos.first] = value }
+    operator fun get(pos: Position) = grid[pos.y][pos.x]
+    operator fun set(pos: Position, value: Char) { grid[pos.y][pos.x] = value }
 }
 
 fun readGridMapInput(filename: String) = readInput(filename).map { it.toCharArray() }.toTypedArray()
 
 class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
-    lateinit var guardPosition: Pair<Int, Int>
+    lateinit var guardPosition: Position
     lateinit var guardDirection: GuardDirection
 
     companion object {
@@ -34,7 +41,7 @@ class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
             line.forEachIndexed { x, c ->
                 GuardDirection.entries.forEach { direction ->
                     if (c == direction.char) {
-                        guardPosition = Pair(x, y)
+                        guardPosition = Position(x, y)
                         guardDirection = direction
                         set(guardPosition, '.')
                         return@findPos
@@ -45,10 +52,10 @@ class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
         set(guardPosition, '.')
     }
 
-    fun withChangedField(position: Pair<Int, Int>, change: Char, block: () -> Unit) {
+    fun withChangedField(position: Position, change: Char, block: () -> Unit) {
         val oldPos = guardPosition
         val oldDirection = guardDirection
-        val currentField = grid[position.second][position.first]
+        val currentField = get(position)
 
         set(position, change)
         block()
@@ -57,23 +64,12 @@ class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
         set(position, currentField)
     }
 
-    fun fieldInDirection(direction: GuardDirection): Pair<Int, Int> =
+    fun fieldInDirection(direction: GuardDirection): Position =
         when (direction) {
-            GuardDirection.RIGHT -> {
-                guardPosition.first + 1 to guardPosition.second
-            }
-
-            GuardDirection.UP -> {
-                guardPosition.first to guardPosition.second - 1
-            }
-
-            GuardDirection.DOWN -> {
-                guardPosition.first to guardPosition.second + 1
-            }
-
-            GuardDirection.LEFT -> {
-                guardPosition.first - 1 to guardPosition.second
-            }
+            GuardDirection.RIGHT -> guardPosition.right
+            GuardDirection.UP -> guardPosition.up
+            GuardDirection.DOWN -> guardPosition.down
+            GuardDirection.LEFT -> guardPosition.left
         }
 
     val fieldAhead get() = fieldInDirection(guardDirection)
@@ -85,7 +81,7 @@ class GuardMap(grid: Array<CharArray>) : GridMap(grid) {
             if (outOfBounds(next)) {
                 return false
             }
-            if (grid[next.second][next.first] == '#') {
+            if (get(next) == '#') {
                 guardDirection = guardDirection.turn()
                 continue
             } else {
@@ -117,8 +113,8 @@ fun checkInfiniteLoops() {
             if (map1.grid[y][x] == '#') {
                 continue
             }
-            map1.withChangedField(x to y, '#') {
-                map2.withChangedField(x to y, '#') {
+            map1.withChangedField(Position(x,y), '#') {
+                map2.withChangedField(Position(x, y), '#') {
                     // with guard on map 1 travelling twice as fast as the guard on map 2,
                     // if they ever meet on the same field while facing in the same direction,
                     // there is an infinite loop

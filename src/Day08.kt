@@ -1,20 +1,21 @@
-fun GridMap.search(what: Char): List<Pair<Int, Int>> {
-    val matches = mutableListOf<Pair<Int, Int>>()
+
+fun GridMap.search(predicate: (Char) -> Boolean): List<Position> {
+    val matches = mutableListOf<Position>()
     traverse { position ->
-        if (get(position) == what) {
-            matches.add(position)
-        }
+        if (predicate(get(position))) matches.add(position)
     }
     return matches
 }
 
-operator fun Pair<Int, Int>.plus(other: Pair<Int, Int>) = (first + other.first) to (second + other.second)
-operator fun Pair<Int, Int>.minus(other: Pair<Int, Int>) = (first - other.first) to (second - other.second)
+fun GridMap.search(what: Char) = search { it == what }
 
-fun GridMap.traverse(block: (Pair<Int, Int>) -> Unit) {
+operator fun Position.plus(other: Position) = Position(x + other.x, y + other.y)
+operator fun Position.minus(other: Position) = Position(x - other.x, y - other.y)
+
+fun GridMap.traverse(block: (Position) -> Unit) {
     for (y in 0..<height) {
         for (x in 0..<width) {
-            block(x to y)
+            block(Position(x, y))
         }
     }
 }
@@ -25,8 +26,8 @@ enum class Behaviour {
     AllMultiples
 }
 
-private fun GridMap.findAntinodes(behaviour: Behaviour): MutableSet<Pair<Int, Int>> {
-    val antinodes = mutableSetOf<Pair<Int, Int>>()
+private fun GridMap.findAntinodes(behaviour: Behaviour): MutableSet<Position> {
+    val antinodes = mutableSetOf<Position>()
     traverse { position ->
         val current = get(position)
         if (!current.isLetterOrDigit()) { // no antenna here
